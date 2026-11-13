@@ -185,6 +185,25 @@ dl.kv dd{white-space:pre-line}
   .summary{top:env(safe-area-inset-top,0px)}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+/* PDF 保存用（印刷時だけ表示する一覧表。A4 横） */
+#printArea{display:none}
+@page{size:A4 landscape;margin:10mm}
+@media print{
+  html,body{height:auto!important;background:#fff!important;color:#000!important}
+  body.printing .app{display:none!important}
+  body.printing #printArea{display:block;font-size:8.5pt;line-height:1.4;color:#000}
+  #printArea h1{font-size:14pt;margin:0 0 2mm;line-height:1.3}
+  #printArea .p-cond{margin:0 0 1mm;font-size:8.5pt}
+  #printArea .p-src{margin:0 0 3mm;font-size:7.5pt;color:#444}
+  #printArea table{width:100%;border-collapse:collapse;table-layout:fixed}
+  #printArea thead{display:table-header-group}
+  #printArea tr{break-inside:avoid;page-break-inside:avoid}
+  #printArea th,#printArea td{border:.2mm solid #888;padding:1mm 1.2mm;text-align:left;vertical-align:top;overflow-wrap:anywhere;word-break:break-all}
+  #printArea th{background:#e6ecea;font-weight:700;white-space:nowrap;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  #printArea td.c,#printArea th.c{text-align:right}
+  #printArea td.nw{white-space:nowrap;word-break:normal}
+}
 </style>
 
 </head>
@@ -236,6 +255,7 @@ dl.kv dd{white-space:pre-line}
               <option value="name">名称順</option>
             </select>
             <button class="btn" id="csv" type="button">CSV</button>
+            <button class="btn" id="pdf" type="button" title="表示中の一覧を PDF で保存（印刷画面で「PDF として保存」を選びます）">PDF</button>
           </div>
         </div>
         <ul class="list" id="list"></ul>
@@ -255,6 +275,7 @@ dl.kv dd{white-space:pre-line}
     </div>
   </main>
 </div>
+<div id="printArea" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
@@ -533,6 +554,53 @@ function csv(){
   document.body.appendChild(a); a.click(); a.remove();
 }
 
+/* ---------- PDF（印刷画面から「PDF として保存」） ---------- */
+function conditionText(){
+  const parts = [];
+  const ms = [...state.months].sort();
+  parts.push("処理月: " + (ms.length ? ms.map(m => META.months?.[m]?.label || (() => { const {y, mo} = monthLabel(m); return `${y}年${mo}月`; })()).join("、") : "全期間"));
+  if (state.cats.size < CATS.length) parts.push("種別: " + CATS.filter(c => state.cats.has(c.key)).map(c => c.key).join("・"));
+  if (state.sect !== "all") parts.push("指定の種類: " + (state.sect === "fresh" ? "指定分" : "遡及指定分"));
+  if (state.area !== "all") parts.push("地域: " + state.area);
+  if (state.region) parts.push("医療圏: " + state.region);
+  if (state.munis.size) parts.push("市区町村: " + [...state.munis].join("、"));
+  if (state.q) parts.push("キーワード: " + state.q);
+  if (state.mapSync) parts.push("地図の表示範囲内のみ");
+  parts.push("並び順: " + ({region:"地域順", date:"指定日の新しい順", name:"名称順"}[state.sort]));
+  return parts.join("　／　");
+}
+function pdf(){
+  const rs = lastVisible;
+  if (!rs.length) { alert("出力する医療機関がありません。絞り込み条件を広げてください。"); return; }
+  const d = new Date(), p2 = n => String(n).padStart(2, "0");
+  const today = `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`;
+  const byCat = CATS.map(c => `${c.key} ${rs.filter(r => r.category === c.key).length}`).join("／");
+  const cols = [
+    ["No.", "3%", "c nw", (r, i) => i + 1],
+    ["種別", "5%", "nw", r => (r.category || "") + (r.retroactive ? "\n(遡及)" : "")],
+    ["名称", "17%", "", r => r.name || "（名称不明）"],
+    ["所在地", "18%", "", r => [r.postal ? "〒" + r.postal : "", r.address || ""].filter(Boolean).join(" ")],
+    ["電話番号", "9%", "nw", r => r.tel || ""],
+    ["開設者", "12%", "", r => r.founder || ""],
+    ["管理者", "9%", "", r => r.manager || ""],
+    ["診療科", "11%", "", r => (r.departments_full || r.departments || []).join("・")],
+    ["指定年月日", "9%", "nw", r => r.designated_wareki || ""],
+    ["登録理由", "7%", "", r => r.reason || ""],
+  ];
+  $("printArea").innerHTML = `<h1>東京都 保険医療機関・薬局の新規指定　対象医療機関一覧</h1>
+    <p class="p-cond"><b>${rs.length} 件</b>（${esc(byCat)}）　${esc(conditionText())}</p>
+    <p class="p-src">出力日 ${today}　／　出典: 関東信越厚生局「保険医療機関・保険薬局の新規指定一覧」${META.updated_at ? `（最終取り込み ${esc(META.updated_at.slice(0,10))}）` : ""}</p>
+    <table><colgroup>${cols.map(c => `<col style="width:${c[1]}">`).join("")}</colgroup>
+    <thead><tr>${cols.map(c => `<th class="${c[2].includes("c") ? "c" : ""}">${c[0]}</th>`).join("")}</tr></thead>
+    <tbody>${rs.map((r, i) => `<tr>${cols.map(c => `<td class="${c[2]}">${esc(c[3](r, i)).replace(/\n/g, "<br>")}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+  const title = document.title;
+  document.title = `東京新規指定一覧_${today}`;   // 保存時の既定ファイル名になる
+  document.body.classList.add("printing");
+  const done = () => { document.body.classList.remove("printing"); document.title = title; $("printArea").innerHTML = ""; window.removeEventListener("afterprint", done); };
+  window.addEventListener("afterprint", done);
+  window.print();
+}
+
 /* ---------- イベント ---------- */
 function bind(){
   $("bars").addEventListener("click", e => {
@@ -559,6 +627,7 @@ function bind(){
   $("detail").addEventListener("click", e => { if (e.target.id === "closeDetail") closeDetail(); });
   document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("detail").hidden) closeDetail(); });
   $("csv").onclick = csv;
+  $("pdf").onclick = pdf;
 }
 
 async function main(){
@@ -569,7 +638,7 @@ async function main(){
   if (saved) { state.cats = new Set(saved.cats?.length ? saved.cats : CATS.map(c => c.key)); Object.assign(state, {area:saved.area || "all", region:saved.region || "", sect:saved.sect || "all", sort:saved.sort || "region"}); state.munis = new Set(saved.munis || []); }
   if (MONTHS.length) state.months = new Set([MONTHS[MONTHS.length - 1]]);
   const demo = !!META.demo;
-  if (demo) $("csv").hidden = true;
+  if (demo) { $("csv").hidden = true; $("pdf").hidden = true; }
   const upd = META.updated_at ? `最終取り込み ${META.updated_at.slice(0,10)}` : "";
   const chk = META.checked_at ? `最終確認 ${META.checked_at.slice(0,10)}` : "";
   $("foot").innerHTML = `<span>${[upd, chk].filter(Boolean).join("／")}</span>
