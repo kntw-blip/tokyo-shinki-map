@@ -180,18 +180,72 @@ dl.kv dd{white-space:pre-line}
   header.top{order:1}
   .months{order:2}
   .mapwrap{order:3;height:46vh;min-height:280px}
+  .mapwrap.has-route{height:72vh;min-height:440px}
   .side-scroll{order:4;overflow:visible}
-  .detail{position:fixed;inset:0;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+  .detail{position:fixed;inset:0;z-index:2000;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
   .summary{top:env(safe-area-inset-top,0px)}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+
+/* 重なり順: 地図の部品（Leaflet は z-index 200〜1000）を地図の枠内に閉じ込め、詳細や使い方が上に出るようにする */
+.mapwrap{isolation:isolate;z-index:0}
+
+/* 使い方 */
+.top-row{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.helpbtn{flex:none;display:inline-flex;align-items:center;gap:5px;font-weight:700;font-size:var(--s2);padding:7px 12px}
+.helpbtn i{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--ink);color:var(--surface);font-style:normal;font-size:12px}
+.hint{margin-top:6px;font-size:var(--s2);background:var(--ika-soft);border-radius:8px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.hint span:last-child{white-space:nowrap}
+.hint .linkbtn{color:var(--ink);font-size:var(--s2);font-weight:700}
+.help{position:fixed;inset:0;z-index:3000;background:var(--surface);overflow-y:auto;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.help-in{max-width:760px;margin:0 auto}
+.help-head{position:sticky;top:0;background:var(--surface);border-bottom:1px solid var(--line);padding-block:10px;display:flex;justify-content:space-between;align-items:center;gap:8px;z-index:1}
+.help-head h2{margin:0;font-size:var(--s4)}
+.help-body{padding-block:14px 40px;display:grid;gap:10px}
+.help-body .lead{margin:0;font-size:var(--s3)}
+.help-toc{display:flex;flex-wrap:wrap;gap:6px}
+.help details{border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.help summary{cursor:pointer;font-weight:700;padding:11px 14px;font-size:var(--s3)}
+.help details[open] summary{border-bottom:1px solid var(--line)}
+.help .sec{padding:10px 14px 14px;font-size:var(--s2);display:grid;gap:8px}
+.help .sec p,.help .sec ol,.help .sec ul,.help .sec dl{margin:0}
+.help .sec ol,.help .sec ul{padding-left:1.4em;display:grid;gap:4px}
+.help .sec dt{font-weight:700;margin-top:6px}
+.help .sec dd{margin:0;color:var(--muted)}
+.help kbd{display:inline-block;border:1px solid var(--line);border-radius:5px;padding:0 6px;background:var(--wash);font:inherit;font-weight:700;white-space:nowrap}
+.help .sw{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:0}
+
+/* 現在地とルート */
+.mapbtn{position:absolute;left:max(10px,env(safe-area-inset-left,0px));top:10px;z-index:900;display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 12px;font-size:var(--s2);font-weight:700;cursor:pointer;box-shadow:var(--shadow)}
+.mapbtn i{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted);box-sizing:border-box;position:relative}
+.mapbtn[aria-pressed="true"]{background:#1A73E8;border-color:#1A73E8;color:#fff}
+.mapbtn[aria-pressed="true"] i{border-color:#fff;background:#fff}
+.mapbtn.busy i{animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.25}}
+.me{width:16px;height:16px;border-radius:50%;background:#1A73E8;border:3px solid #fff;box-shadow:0 0 0 2px rgba(26,115,232,.45),0 1px 4px rgba(0,0,0,.4);box-sizing:border-box}
+.route{position:absolute;left:max(8px,env(safe-area-inset-left,0px));bottom:22px;z-index:950;width:min(380px,calc(100% - 16px));background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px;box-shadow:var(--shadow);display:grid;gap:8px;font-size:var(--s2)}
+.route-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.route-head b{display:block;font-size:var(--s3);line-height:1.35}
+.route-modes{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.route-modes button{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:5px 2px;cursor:pointer;display:grid;gap:1px;justify-items:center;font-size:11px;line-height:1.3;min-width:0}
+.route-modes button b{font-size:var(--s2);white-space:nowrap}
+.route-modes button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.route-info b{font-size:var(--s3)}
+.route .links,.droute .links{align-items:center}
+.route .linkbtn,.droute .linkbtn{font-size:var(--s2);color:var(--ink)}
+.mapwrap.has-route .legend{display:none}
+.droute{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:8px}
+.droute table{border-collapse:collapse;width:100%;font-size:var(--s2)}
+.droute td{padding:5px 0;border-bottom:1px solid var(--line)}
+.droute td:last-child{text-align:right;font-weight:700}
+.toast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));width:max-content;transform:translateX(-50%);z-index:4000;background:var(--ink);color:var(--surface);padding:10px 14px;border-radius:10px;font-size:var(--s2);max-width:min(92vw,420px);box-shadow:var(--shadow)}
 
 /* PDF 保存用（印刷時だけ表示する一覧表。A4 横） */
 #printArea{display:none}
 @page{size:A4 landscape;margin:10mm}
 @media print{
   html,body{height:auto!important;background:#fff!important;color:#000!important}
-  body.printing .app{display:none!important}
+  body.printing .app,body.printing .help,body.printing .toast{display:none!important}
   body.printing #printArea{display:block;font-size:8.5pt;line-height:1.4;color:#000}
   #printArea h1{font-size:14pt;margin:0 0 2mm;line-height:1.3}
   #printArea .p-cond{margin:0 0 1mm;font-size:8.5pt}
@@ -212,8 +266,9 @@ dl.kv dd{white-space:pre-line}
   <aside class="side">
     <div class="side-inner">
       <header class="top pad">
-        <h1>東京都 保険医療機関・薬局の新規指定</h1>
+        <div class="top-row"><h1>東京都 保険医療機関・薬局の新規指定</h1><button class="btn helpbtn" id="openHelp" type="button"><i aria-hidden="true">?</i>使い方</button></div>
         <p id="sourceLine">関東信越厚生局「新規指定一覧」を毎日確認して取り込んでいます</p>
+        <div class="hint" id="hint" hidden><span>はじめての方へ: 操作の手順をまとめています。</span><span><button class="linkbtn" type="button" id="hintOpen">使い方を見る</button>　<button class="linkbtn" type="button" id="hintClose" aria-label="案内を閉じる">閉じる</button></span></div>
         <div class="demo" id="demoNote" hidden>架空のサンプルデータで表示しています。GitHub に設置すると実データに置き換わります。</div>
       </header>
 
@@ -267,6 +322,8 @@ dl.kv dd{white-space:pre-line}
   </aside>
   <main class="mapwrap">
     <div id="map" aria-label="地図"></div>
+    <button class="mapbtn" id="locate" type="button" aria-pressed="false" title="現在地を地図に表示します（位置情報を使います）"><i aria-hidden="true"></i><span id="locateLabel">現在地</span></button>
+    <div class="route" id="routePanel" hidden aria-label="現在地からのルート"></div>
     <div class="legend" aria-hidden="true">
       <span><i style="background:var(--ika)"></i>医科</span>
       <span><i style="background:var(--shika)"></i>歯科</span>
@@ -275,6 +332,107 @@ dl.kv dd{white-space:pre-line}
     </div>
   </main>
 </div>
+<section class="help" id="help" hidden role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+  <div class="help-in">
+    <div class="help-head pad"><h2 id="helpTitle">使い方ガイド</h2><button class="btn" type="button" id="closeHelp">閉じる</button></div>
+    <div class="help-body pad">
+      <p class="lead">東京都で新しく指定された保険医療機関・薬局を、地図と一覧で調べるためのシステムです。見出しをタップすると説明が開きます。</p>
+      <details open><summary>1. まずはこの3ステップ</summary><div class="sec">
+        <ol>
+          <li><b>月を選ぶ</b> — 画面上部の棒グラフ「処理月ごとの件数」で、見たい月の棒をタップします。最初は最新の月が選ばれています。</li>
+          <li><b>条件で絞る</b> — <kbd>医科</kbd> <kbd>歯科</kbd> <kbd>薬局</kbd> や地域のボタン、キーワードで、対象を絞り込みます。</li>
+          <li><b>医療機関をタップする</b> — 一覧の行、または地図上の点をタップすると、住所・電話・開設者・管理者などの詳しい情報が見られます。</li>
+        </ol>
+        <p>条件は何度でも変えられます。迷ったら <kbd>全期間を選ぶ</kbd> と <kbd>東京都全域</kbd> を押すと、ほぼ最初の状態に戻ります。</p>
+      </div></details>
+      <details><summary>2. 画面の見方</summary><div class="sec">
+        <ul>
+          <li><b>パソコン</b> — 左側に「月の棒グラフ・絞り込み条件・一覧」、右側に地図が並びます。</li>
+          <li><b>スマホ</b> — 上から順に「月の棒グラフ → 地図 → 絞り込み条件 → 一覧」と縦に並びます。下へスクロールすると一覧が出てきます。</li>
+          <li><b>件数</b> — 一覧のすぐ上の大きな数字が、いまの条件に合う医療機関の数です。</li>
+        </ul>
+        <p>色の意味: <span class="sw" style="background:var(--ika)"></span> 医科　<span class="sw" style="background:var(--shika)"></span> 歯科　<span class="sw" style="background:var(--yakkyoku)"></span> 薬局</p>
+      </div></details>
+      <details><summary>3. 絞り込みのしかた</summary><div class="sec">
+        <dl>
+          <dt>処理月（棒グラフ）</dt><dd>棒をタップするとその月だけを表示します。同じ棒をもう一度タップするか「全期間を選ぶ」で全期間に戻ります。パソコンでは Shift キーを押しながらクリックすると複数の月を選べます。</dd>
+          <dt>種別（医科・歯科・薬局）</dt><dd>タップするたびに表示・非表示が切り替わります。右の数字は件数です。</dd>
+          <dt>地域（東京都全域・23区・多摩・島しょ）</dt><dd>大まかな地域を選びます。</dd>
+          <dt>二次保健医療圏／市区町村</dt><dd>さらに細かい地域で絞ります。「市区町村で絞り込む」をタップすると市区町村の一覧が開き、複数選べます。</dd>
+          <dt>指定の種類</dt><dd>「指定分」は新たな開設が中心、「遡及指定分」は開設者の交代や移転など既存の医療機関が中心です。新規開業だけを見たいときは「指定分」を選びます。</dd>
+          <dt>キーワード</dt><dd>名称・住所・開設者・管理者・診療科・電話番号などから探せます。例:「小児科」「世田谷」「医療法人」。空白で区切ると、すべてを含むものに絞れます。</dd>
+          <dt>地図に表示されている範囲だけを一覧に出す</dt><dd>チェックを入れると、地図に見えている範囲の医療機関だけが一覧に並びます。</dd>
+        </dl>
+        <p>選んだ条件（月とキーワード以外）は、次に開いたときも覚えています。</p>
+      </div></details>
+      <details><summary>4. 一覧と詳細</summary><div class="sec">
+        <ul>
+          <li>一覧の行をタップすると、その医療機関の<b>全項目</b>（電話番号・開設者・管理者・診療科・指定年月日など）が開きます。<kbd>一覧に戻る</kbd> で閉じます。</li>
+          <li>並び順は、件数の右にあるメニューで「地域順／指定日の新しい順／名称順」に変えられます。</li>
+          <li>一覧には先頭400件まで表示されます。それより多いときは条件を絞ってください（CSV・PDF には全件が出ます）。</li>
+          <li>詳細の下にある「Google マップで開く」から、周辺のようすや口コミを確認できます。</li>
+        </ul>
+      </div></details>
+      <details><summary>5. 地図の使い方</summary><div class="sec">
+        <ul>
+          <li><b>動かす・拡大する</b> — 指でなぞって移動、2本指で広げて拡大します（パソコンはドラッグとマウスホイール）。右上の <kbd>＋</kbd> <kbd>−</kbd> でも拡大・縮小できます。</li>
+          <li><b>数字の入った黒い丸</b> — 近くにある医療機関をまとめたものです。タップすると拡大して分かれます。</li>
+          <li><b>色のついた点</b> — 医療機関1件です。タップすると名称などの吹き出しが出て、「全項目を見る」で詳細が開きます。</li>
+          <li><b>点線の丸</b> — 住所から正確な位置がわからず、市区町村の代表的な地点に置いたものです。実際の場所は住所で確認してください。</li>
+        </ul>
+      </div></details>
+      <details><summary>6. 現在地の表示とルート・所要時間</summary><div class="sec">
+        <ol>
+          <li>地図の左上にある <kbd>現在地</kbd> ボタンをタップします。</li>
+          <li>「位置情報の利用を許可しますか」と聞かれたら<b>許可</b>を選びます。地図に青い丸で現在地が表示されます。</li>
+          <li>そのまま行きたい医療機関（地図の点、または一覧の行）をタップすると、現在地からのルートが自動で地図に描かれ、道のりと所要時間が表示されます。</li>
+          <li><kbd>徒歩</kbd> <kbd>自転車</kbd> <kbd>車</kbd> <kbd>電車</kbd> <kbd>バス</kbd> をタップすると、移動手段を切り替えられます。</li>
+          <li>「Google マップで経路を開く」をタップすると、Google マップで実際の道案内や乗換案内が見られます。</li>
+        </ol>
+        <ul>
+          <li>徒歩・自転車・車は、道路に沿ったルートから計算した時間です。車は渋滞を考慮していません。</li>
+          <li><b>電車・バスは距離から計算した目安</b>です（時刻表は使っていません）。正確な時間は Google マップで確認してください。地図上は点線の直線で表示します。</li>
+          <li>現在地の表示をやめるには、もう一度 <kbd>現在地 ON</kbd> ボタンをタップします。</li>
+          <li>ルートの計算のため、現在地と目的地の位置が外部の経路検索サーバー（OpenStreetMap・FOSSGIS 運営）に送られます。このシステム自体は現在地を保存しません。</li>
+        </ul>
+      </div></details>
+      <details><summary>7. 一覧を CSV・PDF で保存する</summary><div class="sec">
+        <ul>
+          <li><kbd>CSV</kbd> — いま表示している一覧を、Excel で開けるファイルとして保存します。全項目が入ります。</li>
+          <li><kbd>PDF</kbd> — いま表示している一覧を、A4 横の表にします。印刷の画面が開くので、送信先（プリンター）で<b>「PDF として保存」</b>を選んで保存します。そのまま紙に印刷することもできます。</li>
+        </ul>
+        <p>どちらも、絞り込みと並び順がそのまま反映されます。先に条件を整えてからボタンを押してください。</p>
+      </div></details>
+      <details><summary>8. 用語の説明</summary><div class="sec">
+        <dl>
+          <dt>新規指定</dt><dd>保険診療・保険調剤を行える医療機関・薬局として、厚生局から新たに指定を受けることです。</dd>
+          <dt>処理月</dt><dd>厚生局が一覧を公表した月の区切りです。</dd>
+          <dt>指定分</dt><dd>その月に新たに指定されたもの。新規開設が中心です。</dd>
+          <dt>遡及指定分</dt><dd>開設者の交代（個人から法人への変更など）・移転・組織変更により、前の指定日にさかのぼって指定されたもの。実質的には既存の医療機関です。</dd>
+          <dt>二次保健医療圏</dt><dd>東京都を13に分けた医療の地域区分です（例: 区中央部＝千代田・中央・港・文京・台東）。</dd>
+          <dt>開設者／管理者</dt><dd>開設者は医療機関を設立・運営する人や法人、管理者は院長など現場の責任者です。</dd>
+        </dl>
+      </div></details>
+      <details><summary>9. 困ったとき</summary><div class="sec">
+        <dl>
+          <dt>一覧に何も出ない</dt><dd>条件を絞りすぎている可能性があります。キーワードを消し、「全期間を選ぶ」「東京都全域」を押し、医科・歯科・薬局をすべて選んでください。</dd>
+          <dt>現在地が表示されない</dt><dd>位置情報が許可されていない可能性があります。iPhone は「設定 → プライバシーとセキュリティ → 位置情報サービス」をオンにし、お使いのブラウザ（Safari など）を「使用中のみ許可」にします。Android は「設定 → 位置情報」をオンにし、ブラウザのサイト設定で位置情報を許可します。そのあとページを読み込み直してください。</dd>
+          <dt>ルートが直線で表示される／「概算」と出る</dt><dd>経路検索サーバーに一時的につながらなかったときは、直線距離から計算した概算に切り替わります。少し時間をおいて、もう一度医療機関をタップしてください。</dd>
+          <dt>地図が出ない・動きがおかしい</dt><dd>通信状況を確認して、ページを読み込み直してください。</dd>
+          <dt>データはいつ更新される？</dt><dd>毎日自動で厚生局のページを確認し、新しい月の一覧が公表されると取り込みます。最終の取り込み日は一覧の一番下に表示されています。</dd>
+        </dl>
+      </div></details>
+      <details><summary>10. ご注意・出典</summary><div class="sec">
+        <ul>
+          <li>出典は関東信越厚生局「保険医療機関・保険薬局の新規指定一覧」です。訪問や連絡の前に、最新の情報を各医療機関の公式情報でも確認してください。</li>
+          <li>地図上の位置は住所から自動で求めたもので、ずれることがあります。</li>
+          <li>地図: 国土地理院（地理院タイル）。ルート: OpenStreetMap のデータ（© OpenStreetMap contributors）と FOSSGIS の経路検索サーバーを利用しています。</li>
+        </ul>
+      </div></details>
+    </div>
+  </div>
+</section>
+<div class="toast" id="toast" role="status" hidden></div>
 <div id="printArea" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -488,7 +646,7 @@ function renderMap(){
   if (!map) return;
   cluster.clearLayers(); markers.clear();
   const rs = filtered().filter(r => r.lat && r.lng);
-  const ms = rs.map(r => { const m = markerFor(r); markers.set(r.id, m); m.on("click", () => highlight(r.id, false)); return m; });
+  const ms = rs.map(r => { const m = markerFor(r); markers.set(r.id, m); m.on("click", () => { highlight(r.id, false); routeTo(r.id); }); return m; });
   cluster.addLayers(ms);
 }
 function fitToFiltered(){
@@ -509,7 +667,7 @@ function highlight(id, flyTo){
   document.querySelector(`.item[data-id="${CSS.escape(id)}"]`)?.classList.add("active");
   const m = markers.get(id);
   if (m && flyTo && cluster.hasLayer(m)) {
-    map.once("moveend", () => { if (markers.get(id) === m && cluster.hasLayer(m)) { const p = cluster.getVisibleParent(m); if (p === m) m.openPopup(); else p?.spiderfy?.(); } });
+    map.once("moveend", () => { if (markers.get(id) === m && cluster.hasLayer(m) && route.id !== id) { const p = cluster.getVisibleParent(m); if (p === m) m.openPopup(); else p?.spiderfy?.(); } });
     map.setView(m.getLatLng(), Math.max(map.getZoom(), 16), {animate:false});
   }
 }
@@ -523,16 +681,17 @@ function openDetail(id, flyTo = true){
   const kv = FIELDS.map(([k, l]) => [l, val(k)]).filter(([, v]) => v != null);
   const raw = (r.raw || []).map(([h, v]) => `<dt>${esc(h)}</dt><dd>${esc(v)}</dd>`).join("");
   const q = encodeURIComponent(`${r.name || ""} ${r.address || ""}`);
-  const geo = r.lat ? `https://maps.gsi.go.jp/#17/${r.lat}/${r.lng}/` : null;
+  const gsi = r.lat ? `https://maps.gsi.go.jp/#17/${r.lat}/${r.lng}/` : null;
   const d = $("detail");
   d.innerHTML = `<div class="detail-head pad"><span class="tag ${c.cls}">${esc(c.key)}</span><button class="btn" type="button" id="closeDetail">一覧に戻る</button></div>
     <div class="detail-body pad">
       <h2>${esc(r.name || "（名称不明）")}</h2>
+      <div id="detailRoute" data-id="${esc(r.id)}"></div>
       <dl class="kv">${kv.map(([l, v]) => `<dt>${esc(l)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>
       ${raw ? `<div><h4>原本の記載（列の見出しと値をそのまま）</h4><dl class="kv">${raw}</dl></div>` : ""}
       <div class="links">
         <a href="https://www.google.com/maps/search/?api=1&query=${q}" target="_blank" rel="noopener">Google マップで開く</a>
-        ${geo ? `<a href="${geo}" target="_blank" rel="noopener">地理院地図で開く</a>` : ""}
+        ${gsi ? `<a href="${gsi}" target="_blank" rel="noopener">地理院地図で開く</a>` : ""}
         ${r.source_url ? `<a href="${esc(r.source_url)}" target="_blank" rel="noopener">原本（${r.source === "excel" ? "Excel" : "PDF"}）</a>` : ""}
       </div>
       ${r.geo_precision && r.geo_precision !== "address" ? `<p class="note">住所から正確な位置を特定できなかったため、地図上は${esc(r.municipality || "")}の代表点に置いています。</p>` : ""}
@@ -540,6 +699,7 @@ function openDetail(id, flyTo = true){
     </div>`;
   d.hidden = false; d.scrollTop = 0;
   $("closeDetail").focus();
+  if (geo.pos) routeTo(id); else renderRoute();
 }
 function closeDetail(){ $("detail").hidden = true; const el = document.querySelector(`.item[data-id="${CSS.escape(state.selected || "")}"]`); el?.focus(); }
 
@@ -553,6 +713,163 @@ function csv(){
   a.download = `tokyo-shinki-shitei-${new Date().toISOString().slice(0,10)}.csv`;
   document.body.appendChild(a); a.click(); a.remove();
 }
+
+/* ---------- お知らせ（画面下の短いメッセージ） ---------- */
+let toastTimer;
+function toast(msg, ms = 6000){ const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, ms); }
+
+/* ---------- 現在地 ---------- */
+const geo = {watch:null, pos:null, marker:null, circle:null, pending:null};
+const km = (a, b) => { const R = 6371, rad = x => x * Math.PI / 180, dLa = rad(b[0] - a[0]), dLo = rad(b[1] - a[1]);
+  const h = Math.sin(dLa / 2) ** 2 + Math.cos(rad(a[0])) * Math.cos(rad(b[0])) * Math.sin(dLo / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); };
+function setLocateUI(on, busy){ const b = $("locate"); b.setAttribute("aria-pressed", on ? "true" : "false"); b.classList.toggle("busy", !!busy);
+  $("locateLabel").textContent = busy ? "現在地を取得中…" : on ? "現在地 ON" : "現在地"; }
+function startLocate(){
+  if (!map) return;
+  if (!("geolocation" in navigator)) { toast("この端末・ブラウザは現在地の取得に対応していません。"); return; }
+  if (geo.watch != null) return;
+  setLocateUI(true, true);
+  geo.watch = navigator.geolocation.watchPosition(onPos, onPosErr, {enableHighAccuracy:true, maximumAge:10000, timeout:20000});
+}
+function stopLocate(){
+  if (geo.watch != null) navigator.geolocation.clearWatch(geo.watch);
+  geo.marker?.remove(); geo.circle?.remove();
+  Object.assign(geo, {watch:null, pos:null, marker:null, circle:null, pending:null});
+  setLocateUI(false); clearRoute();
+}
+function onPos(p){
+  const first = !geo.pos, ll = [p.coords.latitude, p.coords.longitude];
+  geo.pos = ll;
+  if (!geo.marker) {
+    geo.circle = L.circle(ll, {radius:p.coords.accuracy || 0, color:"#1A73E8", weight:1, fillColor:"#1A73E8", fillOpacity:.12, interactive:false}).addTo(map);
+    geo.marker = L.marker(ll, {icon:L.divIcon({className:"", html:'<div class="me"></div>', iconSize:[16,16], iconAnchor:[8,8]}), interactive:false, keyboard:false, zIndexOffset:1000}).addTo(map);
+  } else { geo.marker.setLatLng(ll); geo.circle.setLatLng(ll).setRadius(p.coords.accuracy || 0); }
+  if (first) {
+    setLocateUI(true, false);
+    const want = geo.pending || (!$("detail").hidden ? state.selected : null); geo.pending = null;
+    if (want) routeTo(want); else { map.setView(ll, Math.max(map.getZoom(), 14), {animate:false}); renderRoute(); toast("現在地を表示しました。医療機関をタップすると、そこまでのルートと所要時間が出ます。"); }
+  } else if (route.id && km(ll, route.origin) > 0.2 && Date.now() - route.at > 20000) routeTo(route.id, true);
+}
+function onPosErr(e){
+  const msg = e.code === 1 ? "位置情報の利用が許可されていません。端末またはブラウザの設定で位置情報を許可してから、もう一度「現在地」を押してください。"
+    : e.code === 3 ? "現在地の取得に時間がかかっています。屋外や窓の近くで、もう一度お試しください。" : "現在地を取得できませんでした。位置情報（GPS）がオンになっているか確認してください。";
+  if (!geo.pos) { stopLocate(); toast(msg, 9000); }
+}
+
+/* ---------- ルートと所要時間 ---------- */
+const MODES = [
+  {key:"foot", label:"徒歩", profile:"routed-foot", g:"walking", kmh:4.8},
+  {key:"bike", label:"自転車", profile:"routed-bike", g:"bicycling", kmh:14},
+  {key:"car", label:"車", profile:"routed-car", g:"driving", kmh:22},
+  {key:"train", label:"電車", g:"transit"},
+  {key:"bus", label:"バス", g:"transit"},
+];
+const route = {id:null, origin:null, mode:"foot", res:{}, seq:0, at:0, fitted:false, layer:null};
+const fmtMin = m => { m = Math.max(1, Math.round(m)); return m < 60 ? `${m}分` : `${Math.floor(m / 60)}時間${m % 60 ? `${m % 60}分` : ""}`; };
+const fmtKm = k => k < 1 ? `${Math.max(10, Math.round(k * 100) * 10)} m` : `${k.toFixed(1)} km`;
+const round5 = m => Math.max(5, Math.round(m / 5) * 5);
+// 経路検索サーバーの利用条件（1秒に1回まで）を守るため、問い合わせは1件ずつ間隔をあけて送る
+let reqChain = Promise.resolve(), lastReq = 0;
+function queued(fn){
+  const p = reqChain.then(async () => { const w = lastReq + 1100 - Date.now(); if (w > 0) await new Promise(r => setTimeout(r, w)); lastReq = Date.now(); return fn(); });
+  reqChain = p.catch(() => {}); return p;
+}
+async function fetchRoute(m, o, d){
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 12000);
+  try {
+    const r = await fetch(`https://routing.openstreetmap.de/${m.profile}/route/v1/driving/${o[1]},${o[0]};${d[1]},${d[0]}?overview=full&geometries=geojson`, {signal:ctl.signal});
+    const j = await r.json();
+    if (j.code !== "Ok" || !j.routes?.length) throw new Error(j.code || "no route");
+    return {ok:true, km:j.routes[0].distance / 1000, min:j.routes[0].duration / 60, line:j.routes[0].geometry.coordinates.map(([x, y]) => [y, x])};
+  } finally { clearTimeout(t); }
+}
+function routeTo(id, keepView = false){
+  const r = DATA.find(x => x.id === id);
+  if (!r || !geo.pos || !map) return;
+  if (route.id === id && route.origin && km(geo.pos, route.origin) < 0.2 && Date.now() - route.at < 300000) { renderRoute(); return; }
+  const seq = ++route.seq, o = [...geo.pos];
+  Object.assign(route, {id, origin:o, res:{}, at:Date.now(), fitted:keepView});
+  renderRoute();
+  if (!r.lat) return;
+  const d = [r.lat, r.lng], straight = km(o, d);
+  const road = MODES.filter(m => m.profile), first = road.find(m => m.key === route.mode) || road[0];
+  [first, ...road.filter(m => m !== first)].forEach(m => {
+    queued(() => seq === route.seq ? fetchRoute(m, o, d) : Promise.reject(new Error("stale")))
+      .catch(() => ({ok:false, km:straight * 1.3, min:straight * 1.3 / m.kmh * 60, line:[o, d]}))
+      .then(res => { if (seq !== route.seq) return; route.res[m.key] = res; renderRoute(); });
+  });
+}
+function clearRoute(){ route.seq++; route.id = null; route.res = {}; route.layer?.clearLayers(); renderRoute(); }
+function routeTimes(r){
+  // 各手段の所要時間。電車・バスは時刻表を使わない距離からの目安
+  const out = {}, straight = r.lat ? km(route.origin, [r.lat, r.lng]) : null;
+  MODES.filter(m => m.profile).forEach(m => { const x = route.res[m.key]; out[m.key] = x ? {text:(x.ok ? "" : "約") + fmtMin(x.min), km:x.km, ok:x.ok} : null; });
+  if (straight != null) {
+    const roadKm = (route.res.car || route.res.foot || {km:straight * 1.3}).km;
+    out.train = straight < 1 ? {text:"徒歩圏", est:true} : {text:"約" + fmtMin(round5(12 + straight * 2.2)), est:true};
+    out.bus = straight < 0.8 ? {text:"徒歩圏", est:true} : {text:"約" + fmtMin(round5(8 + roadKm * 4)), est:true};
+  }
+  return out;
+}
+const gmapsDir = (r, m) => `https://www.google.com/maps/dir/?api=1&origin=${route.origin[0]},${route.origin[1]}&destination=${encodeURIComponent(r.address ? `${r.name || ""} 東京都${r.address}` : `${r.lat},${r.lng}`)}&travelmode=${m.g}`;
+function drawRoute(r){
+  if (!route.layer) route.layer = L.layerGroup().addTo(map);
+  route.layer.clearLayers();
+  if (!r?.lat) return;
+  const m = MODES.find(x => x.key === route.mode), x = route.res[route.mode];
+  const line = m.profile ? x?.line : [route.origin, [r.lat, r.lng]];
+  if (!line) return;
+  const dashed = !m.profile || !x.ok;
+  L.polyline(line, {color:"#fff", weight:9, opacity:.85, interactive:false}).addTo(route.layer);
+  L.polyline(line, {color:"#1A73E8", weight:5, opacity:.95, dashArray:dashed ? "2 10" : null, lineCap:"round", interactive:false}).addTo(route.layer);
+  if (!route.fitted) { route.fitted = true; map.closePopup(); fitRoute(line); }
+}
+function fitRoute(line){
+  map.invalidateSize();
+  const ph = $("routePanel").hidden ? 0 : $("routePanel").offsetHeight + 30;
+  map.fitBounds(L.latLngBounds(line), {paddingTopLeft:[30, 60], paddingBottomRight:[30, Math.min(ph, map.getSize().y / 2) + 20], maxZoom:17, animate:false});
+}
+function renderRoute(){
+  const panel = $("routePanel"), r = route.id ? DATA.find(x => x.id === route.id) : null;
+  const wrap = document.querySelector(".mapwrap"), had = wrap.classList.contains("has-route");
+  panel.hidden = !r; wrap.classList.toggle("has-route", !!r);
+  if (had !== !!r && map) map.invalidateSize();
+  if (r) {
+    const t = routeTimes(r), m = MODES.find(x => x.key === route.mode), cur = t[m.key];
+    const info = !r.lat ? `<span class="note">住所から位置を特定できないため、地図にルートを描けません。Google マップで確認してください。</span>`
+      : !cur ? `<span class="note">ルートを計算しています…</span>`
+      : m.profile ? `<b>${m.label} ${cur.text}</b>　道のり ${cur.ok ? "" : "約"}${fmtKm(cur.km)}<br><span class="note">${cur.ok ? (m.key === "car" ? "渋滞は考慮していません。" : "") : "経路検索につながらないため、直線距離からの概算です。"}${r.geo_precision && r.geo_precision !== "address" ? "目的地は市区町村の代表点です。住所で確認してください。" : ""}</span>`
+      : `<b>${m.label} ${cur.text}</b><br><span class="note">距離から計算した目安です（時刻表は未使用）。正確な時間は Google マップで確認してください。</span>`;
+    panel.innerHTML = `<div class="route-head"><div style="min-width:0"><span class="note">現在地から</span><b>${esc(r.name || "（名称不明）")}</b></div><button class="btn" type="button" data-route-close aria-label="ルートを閉じる">閉じる</button></div>
+      ${r.lat ? `<div class="route-modes" role="group" aria-label="移動手段">${MODES.map(x => `<button type="button" data-mode="${x.key}" aria-pressed="${x.key === route.mode}"><span>${x.label}</span><b class="num">${t[x.key] ? t[x.key].text : "…"}</b></button>`).join("")}</div>` : ""}
+      <div class="route-info">${info}</div>
+      <div class="links"><a href="${esc(gmapsDir(r, m))}" target="_blank" rel="noopener">Google マップで経路を開く（${m.label}）</a><button class="linkbtn" type="button" data-open="${esc(r.id)}">全項目を見る</button></div>`;
+    drawRoute(r);
+  }
+  // 詳細画面の中のルート欄
+  const box = document.getElementById("detailRoute");
+  if (!box) return;
+  const id = box.dataset.id, dr = DATA.find(x => x.id === id);
+  if (!dr || !map) { box.innerHTML = ""; return; }
+  if (geo.watch != null && !geo.pos) { box.innerHTML = `<div class="droute"><span class="note">現在地を取得しています…（位置情報の利用を聞かれたら「許可」を選んでください）</span></div>`; return; }
+  if (!geo.pos || route.id !== id) { box.innerHTML = `<div class="droute"><button class="btn" type="button" data-route-start="${esc(id)}">現在地からのルートと所要時間を調べる</button><span class="note">位置情報（GPS）を使います。</span></div>`; return; }
+  const t = routeTimes(dr), dist = route.res.foot || route.res.car;
+  box.innerHTML = `<div class="droute"><h4 style="margin:0">現在地からのルート${dist ? `（道のり ${dist.ok ? "" : "約"}${fmtKm(dist.km)}）` : ""}</h4>
+    ${dr.lat ? `<table>${MODES.map(x => `<tr><td>${x.label}${x.profile ? "" : "（目安）"}</td><td class="num">${t[x.key] ? t[x.key].text : "計算中…"}</td></tr>`).join("")}</table>
+    <span class="note">電車・バスは距離からの目安です。車は渋滞を考慮していません。</span>` : `<span class="note">住所から位置を特定できないため、Google マップで確認してください。</span>`}
+    <div class="links">${dr.lat ? `<button class="btn" type="button" data-route-show>地図でルートを見る</button>` : ""}<a href="${esc(gmapsDir(dr, MODES.find(x => x.key === "train")))}" target="_blank" rel="noopener">Google マップで乗換案内を開く</a></div></div>`;
+}
+function showRouteOnMap(){
+  $("detail").hidden = true;
+  document.querySelector(".mapwrap").scrollIntoView({block:"start"});
+  const r = DATA.find(x => x.id === route.id), m = MODES.find(x => x.key === route.mode);
+  const line = r?.lat ? (m.profile ? route.res[route.mode]?.line : null) || [route.origin, [r.lat, r.lng]] : null;
+  if (line) { route.fitted = true; fitRoute(line); }
+}
+
+/* ---------- 使い方 ---------- */
+function openHelp(){ $("help").hidden = false; $("help").scrollTop = 0; $("hint").hidden = true; try { localStorage.setItem("tks-help-seen", "1"); } catch {} $("closeHelp").focus(); }
+function closeHelp(){ $("help").hidden = true; $("openHelp").focus(); }
 
 /* ---------- PDF（印刷画面から「PDF として保存」） ---------- */
 function conditionText(){
@@ -625,9 +942,23 @@ function bind(){
   $("list").addEventListener("click", e => { const li = e.target.closest(".item"); if (li) openDetail(li.dataset.id); });
   $("list").addEventListener("keydown", e => { if (e.key === "Enter") { const li = e.target.closest(".item"); if (li) openDetail(li.dataset.id); } });
   $("detail").addEventListener("click", e => { if (e.target.id === "closeDetail") closeDetail(); });
-  document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("detail").hidden) closeDetail(); });
+  document.addEventListener("keydown", e => { if (e.key !== "Escape") return; if (!$("help").hidden) closeHelp(); else if (!$("detail").hidden) closeDetail(); });
   $("csv").onclick = csv;
   $("pdf").onclick = pdf;
+  $("locate").onclick = () => { geo.watch != null ? stopLocate() : startLocate(); };
+  $("routePanel").addEventListener("click", e => {
+    if (e.target.closest("[data-route-close]")) { clearRoute(); return; }
+    const b = e.target.closest("[data-mode]"); if (b) { route.mode = b.dataset.mode; route.fitted = false; renderRoute(); }
+  });
+  $("detail").addEventListener("click", e => {
+    const s = e.target.closest("[data-route-start]");
+    if (s) { if (geo.pos) routeTo(s.dataset.routeStart); else { geo.pending = s.dataset.routeStart; startLocate(); renderRoute(); } }
+    if (e.target.closest("[data-route-show]")) showRouteOnMap();
+  });
+  $("openHelp").onclick = $("hintOpen").onclick = openHelp;
+  $("closeHelp").onclick = closeHelp;
+  $("hintClose").onclick = () => { $("hint").hidden = true; try { localStorage.setItem("tks-help-seen", "1"); } catch {} };
+  $("help").querySelectorAll("details").forEach(d => d.addEventListener("toggle", () => { if (d.open) $("help").querySelectorAll("details[open]").forEach(o => { if (o !== d) o.open = false; }); }));
 }
 
 async function main(){
@@ -644,7 +975,8 @@ async function main(){
   $("foot").innerHTML = `<span>${[upd, chk].filter(Boolean).join("／")}</span>
     <span>出典: <a href="https://kouseikyoku.mhlw.go.jp/kantoshinetsu/chousa/shitei.html" target="_blank" rel="noopener">関東信越厚生局 保険医療機関・保険薬局の新規指定一覧</a>（政令に基づく公示）。地図: 国土地理院。位置は住所から自動で求めたもので、ずれることがあります。</span>`;
   bind();
-  if (window.L) initMap(demo); else $("map").innerHTML = `<p class="empty">地図を読み込めませんでした。通信状況を確認して再読み込みしてください。</p>`;
+  try { $("hint").hidden = !!localStorage.getItem("tks-help-seen"); } catch { $("hint").hidden = false; }
+  if (window.L) initMap(demo); else { $("locate").hidden = true; $("map").innerHTML = `<p class="empty">地図を読み込めませんでした。通信状況を確認して再読み込みしてください。</p>`; }
   renderAll(true);
   if (!DATA.length) $("list").innerHTML = `<li class="empty">まだデータがありません。GitHub の Actions で「Update data」を実行すると取り込まれます。</li>`;
 }
