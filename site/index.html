@@ -126,10 +126,11 @@ dl.kv dd{white-space:pre-line}
 .side-inner{position:relative;display:flex;flex-direction:column;min-height:0;flex:1}
 
 /* 地図上の凡例 */
-.legend{position:absolute;right:max(10px,env(safe-area-inset-right,0px));bottom:28px;z-index:900;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:var(--s1);display:grid;gap:2px;box-shadow:var(--shadow)}
+.legend{position:absolute;right:max(10px,env(safe-area-inset-right,0px));bottom:28px;z-index:900;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:var(--s1);display:grid;gap:2px;box-shadow:var(--shadow);pointer-events:none}
 .legend span{display:flex;align-items:center;gap:6px}
 .legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
 .legend i.approx{background:transparent!important;border:2px dashed var(--muted);width:8px;height:8px}
+.hit{width:32px;height:32px;display:grid;place-items:center}
 .dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--surface);box-shadow:0 0 0 1px rgba(0,0,0,.25);box-sizing:border-box}
 .dot.approx{background:transparent!important;border:2.5px dashed;box-shadow:none}
 .dot.sel{transform:scale(1.5);box-shadow:0 0 0 3px var(--ink)}
@@ -514,8 +515,36 @@ function initMap(demo){
       return L.divIcon({html:`<div class="clu" style="width:${s}px;height:${s}px">${n}</div>`, className:"", iconSize:[s, s]}); }
   });
   map.addLayer(cluster);
+  // iPhone では指が数px動いただけでタップが「地図のドラッグ」と判定され、点を押しても無視される（Leaflet の既定は 3px）。許容幅を広げる
+  if (map.dragging?._draggable) map.dragging._draggable.options.clickTolerance = 12;
+  cluster.on("click clusterclick", () => { lastMarkerHit = Date.now(); });
+  tapAssist();
   map.on("moveend", () => { if (state.mapSync) renderList(); });
   if (demo) addMuniLabels();
+}
+// スマホの補助: 軽いタップなのに点・数字の丸が反応しなかったとき、指の近く（約26px以内）にある一番近いものを開く
+let lastMarkerHit = 0;
+function tapAssist(){
+  const el = map.getContainer(); let t0 = null;
+  el.addEventListener("touchstart", e => {
+    t0 = e.touches.length === 1 ? {x:e.touches[0].clientX, y:e.touches[0].clientY, at:Date.now(), ok:!e.target.closest(".leaflet-control,.leaflet-popup")} : null;
+  }, {passive:true});
+  el.addEventListener("touchend", e => {
+    const s = t0, c = e.changedTouches[0]; t0 = null;
+    if (!s || !s.ok || e.touches.length || !c || Date.now() - s.at > 600 || Math.hypot(c.clientX - s.x, c.clientY - s.y) > 12) return;
+    const zoom = map.getZoom(), center = map.getCenter();
+    setTimeout(() => {
+      if (lastMarkerHit >= s.at || map.getZoom() !== zoom || !map.getCenter().equals(center)) return;
+      let best = null, bd = 26;
+      el.querySelectorAll(".leaflet-marker-pane .leaflet-marker-icon").forEach(ic => {
+        const layer = map._targets?.[L.Util.stamp(ic)]; if (!layer?.getLatLng) return;
+        const r = ic.getBoundingClientRect(), big = ic.querySelector(".clu");
+        const d = Math.hypot(r.left + r.width / 2 - c.clientX, r.top + r.height / 2 - c.clientY) - (big ? r.width / 2 - 7 : 0);
+        if (d < bd) { bd = d; best = layer; }
+      });
+      if (best) best.fire("click", {latlng:best.getLatLng(), originalEvent:{}}, true);
+    }, 350);
+  }, {passive:true});
 }
 function addMuniLabels(){
   // サンプル表示用: 地図画像が読めない環境でも位置関係がわかるよう市区町村名を置く
@@ -529,8 +558,9 @@ function addMuniLabels(){
 function markerFor(r){
   const c = catOf(r.category);
   const approx = r.geo_precision !== "address";
-  const icon = L.divIcon({className:"", iconSize:[14,14], iconAnchor:[7,7],
-    html:`<div class="dot ${approx ? "approx" : ""}" style="${approx ? `border-color:var(${c.color})` : `background:var(${c.color})`}"></div>`});
+  // 点は 14px だが、指で押しやすいようにタップできる範囲は 32px にする
+  const icon = L.divIcon({className:"", iconSize:[32,32], iconAnchor:[16,16], popupAnchor:[0,-7],
+    html:`<div class="hit"><div class="dot ${approx ? "approx" : ""}" style="${approx ? `border-color:var(${c.color})` : `background:var(${c.color})`}"></div></div>`});
   const m = L.marker([r.lat, r.lng], {icon, title:r.name || "", keyboard:false});
   m.bindPopup(() => `<div class="pop"><h5>${esc(r.name)}</h5><p>${esc(r.category)}${r.retroactive ? "（遡及）" : ""}　${esc(r.address || "")}</p>
     <p>指定 ${esc(r.designated_wareki || "")}　${esc(r.reason || "")}</p>${r.manager ? `<p>管理者 ${esc(r.manager)}</p>` : ""}${approx ? `<p>位置は${esc(r.municipality || "")}の代表点です</p>` : ""}
